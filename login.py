@@ -2,6 +2,8 @@ import sqlite3
 
 from tkinter import *
 
+from sqlite3 import connect
+
 __author__ = 'clara @ mctc'
 
 database_filename = "itec_2865_sql_injection_demo.db"
@@ -57,11 +59,16 @@ class LoginGUI(Frame):
         db.row_factory = sqlite3.Row  # Row factory allows us to refer to columns by name (default is by integer index)
         cursor = db.cursor()
 
-        sql_statement = '''SELECT name FROM users WHERE username = '%s' and password = '%s' ''' % (uname, password)
+        # sql_statement = '''SELECT name FROM users WHERE username = '%s' and password = '%s' ''' % (uname, password)
 
-        print('About to execute the following SQL statement: \n' + sql_statement)
 
-        cursor.execute(sql_statement)   # Execute the SQL statement we created
+        ''' This is the new line that prevents the SQL injection. '''
+        cursor.execute('''SELECT name FROM users WHERE username=:uname and password=:password ''', {"uname":uname, "password":password})
+        
+
+        # print('About to execute the following SQL statement: \n' + sql_statement)
+
+        # cursor.execute(sql_statement)   # Execute the SQL statement we created
 
         result = None  # Assume login fails, unless DB returns a row for this user
 
@@ -108,10 +115,17 @@ def setup_database():
     cursor.execute('CREATE TABLE users (username text, name text, password text) ')
 
     # Add some sample data. Note that the admin is the first entry in the table, as is often the case
-    cursor.execute('''INSERT INTO users VALUES ( 'admin', 'Abby Admin', 'kittens') ''')
-    cursor.execute('''INSERT INTO users VALUES ( 'bill', 'Bill S Preston', 'excellent!') ''')
-    cursor.execute('''INSERT INTO users VALUES ( 'bart', 'Bart Simpson', 'eatmyshorts') ''')
-    cursor.execute('''INSERT INTO users VALUES ( 'miley', 'Miley Cyrus', 'top40' ) ''')
+    # cursor.execute('''INSERT INTO users VALUES ( 'admin', 'Abby Admin', 'kittens') ''')
+    # cursor.execute('''INSERT INTO users VALUES ( 'bill', 'Bill S Preston', 'excellent!') ''')
+    # cursor.execute('''INSERT INTO users VALUES ( 'bart', 'Bart Simpson', 'eatmyshorts') ''')
+    # cursor.execute('''INSERT INTO users VALUES ( 'miley', 'Miley Cyrus', 'top40' ) ''')
+
+    ''' This is my new code to fixed the lines above! '''
+    cursor.execute('''INSERT INTO users VALUES (?, ?, ?)''', ( 'admin', 'Abby Admin', 'kittens'))
+    cursor.execute('''INSERT INTO users VALUES (?, ?, ?)''', ( 'bill', 'Bill S Preston', 'excellent!'))
+    cursor.execute('''INSERT INTO users VALUES (?, ?, ?)''', ( 'bart', 'Bart Simpson', 'eatmyshorts'))
+    cursor.execute('''INSERT INTO users VALUES (?, ?, ?)''', ( 'miley', 'Miley Cyrus', 'top40' ))
+
 
     # commit saves changes
     db.commit()
@@ -137,6 +151,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
-
-
